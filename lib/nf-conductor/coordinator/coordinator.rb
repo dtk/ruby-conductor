@@ -18,9 +18,15 @@ module Conductor
     # http://ruby-concurrency.github.io/concurrent-ruby/Concurrent/TimerTask.html
     def run(execution_interval=15)
       self.workers.each do |worker|
-        polling_timer = Concurrent::TimerTask.new(execution_interval: execution_interval) do
-          Rails.logger.info("Conductor::Coordinator : Worker (#{worker.task_type}) polling...") if Conductor.config.verbose
+        require 'byebug'; debugger
+        $i = 0
+        $num = 3
+
+        while $i < $num  do
+        # polling_timer = Concurrent::TimerTask.new(execution_interval: execution_interval) do
+          puts("Conductor::Coordinator : Worker (#{worker.task_type}) polling...") if Conductor.config.verbose
           poll_for_task(worker)
+          sleep 5
         end
 
         self.polling_timers << polling_timer
@@ -48,13 +54,13 @@ module Conductor
         process_task(worker, task[:body])
       end
     rescue => e
-      Rails.logger.debug("Conductor::Coordinator : Failed to poll worker (#{worker.task_type}) with error #{e.message}")
+      puts("Conductor::Coordinator : Failed to poll worker (#{worker.task_type}) with error #{e.message}")
     end
 
     # Acknowledges the Task in Conductor, then passes the Task to the Worker to execute.
     # Update the Task in Conductor with status and output data.
     def process_task(worker, task)
-      Rails.logger.info("Conductor::Coordinator : Processing task #{task}") if Conductor.config.verbose
+      puts("Conductor::Coordinator : Processing task #{task}") if Conductor.config.verbose
 
       task_identifiers = {
         taskId: task[:taskId],
@@ -71,7 +77,7 @@ module Conductor
       # Update Conductor about the result of the task
       update_task_with_retry(task_body, 0)
     rescue => e
-      Rails.logger.debug("Conductor::Coordinator : Failed to process task (#{task}) with error #{e.message} at location #{e.backtrace}")
+      puts("Conductor::Coordinator : Failed to process task (#{task}) with error #{e.message} at location #{e.backtrace}")
       update_task_with_retry({ status: 'FAILED' }.merge(task_identifiers), 0)
     end
 

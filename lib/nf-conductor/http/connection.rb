@@ -5,8 +5,6 @@ require 'faraday_middleware'
 module Conductor
   class Connection
     attr_reader :connection, :args
-  require 'logger'
-  @@logger = Logger.new(STDOUT)
     def initialize(args = {})
       @connection ||= Faraday.new(url: Conductor.config.service_uri) do |c|
         c.request :json
@@ -20,7 +18,7 @@ module Conductor
     end
 
     def get(url, args={})
-      @@logger.info("Conductor::Connection : GET #{url} with args #{args}") if Conductor.config.verbose
+      puts("Conductor::Connection : GET #{url} with args #{args}") if Conductor.config.verbose
       connection.get do |req|
         req.url url
         req.headers['Content-Type'] = ( args[:headers] && args[:headers]['Content-Type'] || 'application/json' )
@@ -31,7 +29,7 @@ module Conductor
     end
 
     def post(url, args={})
-      logger.info("Conductor::Connection : POST #{url} with args #{args}") if Conductor.config.verbose
+      puts("Conductor::Connection : POST #{url} with args #{args}") if Conductor.config.verbose
       connection.post do |req|
         req.url url
         req.headers['Content-Type'] = ( args[:headers] && args[:headers]['Content-Type'] || 'application/json' )
